@@ -7,18 +7,25 @@ const app = express()
 const fetch = require('node-fetch')
 
 let Wit = null;
-let interactive = null;
+let log = null;
 try {
   Wit = require('../').interctive;
-  interactive = require('../').interactive;
+  log = require('../').log;
 } catch (e) {
   Wit = require('node-wit').Wit;
-  interactive = require('node-wit').interactive;
+  log = require('node-wit').log;
 }
 const WIT_TOKEN = "ELKAFRRNUCA2II6FZAC65L3Q5NMYN6RJ"
 const FB_APP_SECRET = "82334ed66b5e2d0e65b6de9a6ca4ff6a"
 
 app.set('port', (process.env.PORT || 5000))
+
+app.use(({method, url}, rsp, next) => {
+  rsp.on('finish', () => {
+    console.log(`${rsp.statusCode} ${method} ${url}`);
+  });
+  next();
+});
 
 // Process application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -64,7 +71,7 @@ function sendTextMessage(sender, text) {
     let messageData = { text:text }
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: {access_token:token},
+        qs: {access_token:FB_PAGE_TOKEN},
         method: 'POST',
         json: {
             recipient: {id:sender},
@@ -79,6 +86,59 @@ function sendTextMessage(sender, text) {
     })
 }
 
+// ------- wit.ai bot stuff --------- //
+const sessions = {}
+const findOrCreateSession = (fbid) => {
+  let sessionId;
+  Object.keys(sessions).forEach(k => {
+    if(sessions[k].fbid === fbid) {
+      sessionId = k;
+    }
+  });
+  if(!sessionId) {
+    sessionId = new Date().toISOSring();
+    sessions[sessionId] = {fbid: fbid, context: {}};
+  }
+  return sessionId;
+};
+
+// -- bot actions -- //
+const actions = {
+  send({sessionId}, {text}) {
+    // Our bot has something to say!
+    // Let's retrieve the Facebook user whose session belongs to
+    const recipientId = sessions[sessionId].fbid;
+    if (recipientId) {
+      // Yay, we found our recipient!
+      // Let's forward our bot response to her.
+      // We return a promise to let our bot know when we're done sending
+      return fbMessage(recipientId, text)
+      .then(() => null)
+      .catch((err) => {
+        console.error(
+          'Oops! An error occurred while forwarding the response to',
+          recipientId,
+          ':',
+          err.stack || err
+        );
+      });
+    } else {
+      console.error('Oops! Couldn\'t find user for session:', sessionId);
+      // Giving the wheel back to our bot
+      return Promise.resolve()
+    }
+  },
+  // You should implement your custom actions here
+  // See https://wit.ai/docs/quickstart
+};
+
+// setting up bot
+const wit = new Wit({
+  accessToken: WIT_TOKEN,
+  actions,
+  logger: new log.Logger(log.INFO)
+});
 
 
-const token = process.env.FB_PAGE_ACCESS_TOKEN;
+
+const FB_PAGE_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
