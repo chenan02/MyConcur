@@ -4,6 +4,19 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
 const app = express()
+const fetch = require('node-fetch')
+
+let Wit = null;
+let interactive = null;
+try {
+  Wit = require('../').interctive;
+  interactive = require('../').interactive;
+} catch (e) {
+  Wit = require('node-wit').Wit;
+  interactive = require('node-wit').interactive;
+}
+const WIT_TOKEN = "ELKAFRRNUCA2II6FZAC65L3Q5NMYN6RJ"
+const FB_APP_SECRET = "82334ed66b5e2d0e65b6de9a6ca4ff6a"
 
 app.set('port', (process.env.PORT || 5000))
 
