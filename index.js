@@ -15,12 +15,12 @@ app.listen(app.get('port'), function() {
 
 app.use(bodyParser.json())
 
-app.use((method, url, rsp, next) => {
+/*app.use((method, url, rsp, next) => {
   rsp.on('finish', () => {
     console.log(`${rsp.statusCode} ${method} ${url}`);
   });
   next();
-});
+});*/
 
 // Index route
 app.get('/', function(req, res) {
@@ -29,6 +29,7 @@ app.get('/', function(req, res) {
 
 // for Facebook verification
 app.get('/webhook/', function(req, res) {
+  console.log(req)
     if (req.query['hub.verify_token'] === config.FB_VERIFY_TOKEN) {
         res.send(req.query['hub.challenge'])
     }
@@ -37,7 +38,7 @@ app.get('/webhook/', function(req, res) {
 
 
 // to send messages to facebook
-app.post('/webhooks', function (req, res) {
+app.post('/webhook/', function (req, res) {
   var entry = FB.getMessageEntry(req.body)
   // IS THE ENTRY A VALID MESSAGE?
   if (entry && entry.message) {
@@ -45,12 +46,14 @@ app.post('/webhooks', function (req, res) {
       // NOT SMART ENOUGH FOR ATTACHMENTS YET
       FB.newMessage(entry.sender.id, "That's interesting!")
     } else {
+      FB.newMessage(entry.sender.id, "That's interesting!")
       // SEND TO BOT FOR PROCESSING
-      Bot.read(entry.sender.id, entry.message.text, function (sender, reply) {
-        FB.newMessage(sender, reply)
-      })
+        //Bot.read(entry.sender.id, entry.message.text, function (sender, reply) {
+        //FB.newMessage(sender, reply)
+      //})
     }
   }
 
-  res.sendStatus(200)
+  res.status(200).end();
+
 })
