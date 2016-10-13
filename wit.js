@@ -18,7 +18,7 @@ var firstEntityValue = function (entities, entity) {
 }
 
 var actions = {
-  say (sessionId, context, message, cb) {
+  send (sessionId, context, message, cb) {
     // Bot testing mode, run cb() and return
     if (require.main === module) {
       cb()
@@ -34,10 +34,7 @@ var actions = {
     } else {
       FB.newMessage(context._fbid_, message)
     }
-
-    
     cb()
-    
   },
 
   merge(sessionId, context, entities, message, cb) {
@@ -77,15 +74,15 @@ var actions = {
   // list of functions Wit.ai can execute
   ['fetch-weather'](sessionId, context, cb) {
     // Here we can place an API call to a weather service
-    // if (context.loc) {
-    //  getWeather(context.loc)
-    //    .then(function (forecast) {
-    //      context.forecast = forecast || 'sunny'
-    //    })
-    //    .catch(function (err) {
-    //      console.log(err)
-    //    })
-    // }
+    if (context.loc) {
+      getWeather(context.loc)
+        .then(function (forecast) {
+          context.forecast = forecast || 'sunny'
+        })
+        .catch(function (err) {
+          console.log(err)
+        })
+    }
 
     context.forecast = 'Sunny'
 

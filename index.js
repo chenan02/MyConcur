@@ -46,11 +46,11 @@ app.post('/webhook/', function (req, res) {
       // NOT SMART ENOUGH FOR ATTACHMENTS YET
       FB.newMessage(entry.sender.id, "That's interesting!")
     } else {
-      FB.newMessage(entry.sender.id, "That's interesting!")
+      //FB.newMessage(entry.sender.id, "That's interesting!")
       // SEND TO BOT FOR PROCESSING
-        //Bot.read(entry.sender.id, entry.message.text, function (sender, reply) {
-        //FB.newMessage(sender, reply)
-      //})
+      Bot.read(entry.sender.id, entry.message.text, function (sender, reply) {
+        FB.newMessage(sender, reply)
+      })
     }
   }
 
